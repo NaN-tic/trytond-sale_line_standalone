@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!-- This file is part of the sale_line_standalone module for Tryton.
+The COPYRIGHT file at the top level of this repository contains
+the full copyright notices and license terms. -->
+<tryton>
+    <data>
+        <record model="ir.ui.view" id="sale_line_view_form">
+            <field name="model">sale.line</field>
+            <field name="inherit" ref="sale.sale_line_view_form"/>
+            <field name="domain"
+                eval="Eval('context', {}).get('standalone', False)" pyson="1"/>
+            <field name="name">sale_line_form</field>
+        </record>
+        <record model="ir.ui.view" id="sale_line_view_tree">
+            <field name="model">sale.line</field>
+            <field name="inherit" ref="sale.sale_line_view_tree"/>
+            <field name="domain"
+                eval="Eval('context', {}).get('standalone', False)" pyson="1"/>
+            <field name="name">sale_line_tree</field>
+        </record>
+
+        <record model="ir.action.act_window" id="act_sale_line_standalone">
+            <field name="name">Sale Lines</field>
+            <field name="res_model">sale.line</field>
+            <field name="domain" eval="[('sale', '=', None)]" pyson="1"/>
+            <field name="context" eval="{'standalone': True}" pyson="1"/>
+        </record>
+        <record model="ir.action.act_window.view"
+                id="act_sale_line_standalone_tree">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="sale.sale_line_view_tree"/>
+            <field name="act_window" ref="act_sale_line_standalone"/>
+        </record>
+        <record model="ir.action.act_window.view"
+                id="act_sale_line_standalone_form">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="sale.sale_line_view_form"/>
+            <field name="act_window" ref="act_sale_line_standalone"/>
+        </record>
+        <menuitem parent="sale.menu_sale_form"
+            action="act_sale_line_standalone"
+            id="menu_sale_line_standalone_form" sequence="5"/>
+    </data>
+</tryton>

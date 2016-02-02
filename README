@@ -1,0 +1,20 @@
+trytond-sale_line_standalone
+============================
+
+The sale_line_standalone module of the Tryton application platform.
+
+Installing
+----------
+
+See INSTALL
+
+
+License
+-------
+
+See LICENSE
+
+Copyright
+---------
+
+See COPYRIGHT

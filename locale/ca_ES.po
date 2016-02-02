@@ -1,0 +1,23 @@
+#
+msgid ""
+msgstr "Content-Type: text/plain; charset=utf-8\n"
+
+msgctxt "field:sale.line,company:"
+msgid "Company"
+msgstr "Empresa"
+
+msgctxt "field:sale.line,currency:"
+msgid "Currency"
+msgstr "Moneda"
+
+msgctxt "field:sale.line,party:"
+msgid "Party"
+msgstr "Tercer"
+
+msgctxt "model:ir.action,name:act_sale_line_standalone"
+msgid "Sale Lines"
+msgstr "Línies de venda"
+
+msgctxt "model:ir.ui.menu,name:menu_sale_line_standalone_form"
+msgid "Sale Lines"
+msgstr "Línies de venda"
