@@ -34,7 +34,7 @@ version = info.get('version', '0.0.1')
 major_version, minor_version, _ = version.split('.', 2)
 major_version = int(major_version)
 minor_version = int(minor_version)
-name = 'trytond-sale_line_standalone'
+name = 'trytonzz-sale_line_standalone'
 download_url = 'https://bitbucket.org/zikzakmedia/trytond-sale_line_standalone'
 
 requires = []
