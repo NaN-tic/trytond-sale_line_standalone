@@ -7,7 +7,6 @@ from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Bool, Eval, If, Not
 from trytond.transaction import Transaction
 
-
 __all__ = ['Sale', 'SaleLine']
 __metaclass__ = PoolMeta
 
@@ -123,6 +122,18 @@ class SaleLine:
             self.company = self.sale.company
             self.currency = self.sale.currency
             self.party = self.sale.party
+
+    @fields.depends('party', 'currency')
+    def on_change_product(self):
+        Date = Pool().get('ir.date')
+
+        context = {}
+        context['customer'] = self.party.id if self.party else None
+        if self.party and getattr(self.party, 'sale_price_list'):
+            context['price_list'] = self.party.sale_price_list.id if self.party.sale_price_list else None
+        context['sale_date'] = Date.today()
+        with Transaction().set_context(context):
+            super(SaleLine, self).on_change_product()
 
     @staticmethod
     def default_company():
