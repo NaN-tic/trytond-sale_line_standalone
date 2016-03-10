@@ -84,8 +84,8 @@ class SaleLine:
     @classmethod
     def __register__(cls, module_name):
         TableHandler = backend.get('TableHandler')
-        cursor = Transaction().cursor
-        table = TableHandler(cursor, cls, module_name)
+        cursor = Transaction().connection.cursor()
+        table = TableHandler(cls, module_name)
         sql_table = cls.__table__()
         Sale = Pool().get('sale.sale')
         line = cls.__table__()
@@ -109,7 +109,7 @@ class SaleLine:
                     )
                 )
             cursor.execute(*sql_table.update([sql_table.company], values))
-            table = TableHandler(cursor, cls, module_name)
+            table = TableHandler(cls, module_name)
             table.not_null_action('company', action='add')
 
     @fields.depends('sale')
