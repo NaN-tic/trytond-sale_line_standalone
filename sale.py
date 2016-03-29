@@ -8,10 +8,10 @@ from trytond.pyson import Bool, Eval, If, Not
 from trytond.transaction import Transaction
 
 __all__ = ['Sale', 'SaleLine']
-__metaclass__ = PoolMeta
 
 
 class Sale:
+    __metaclass__ = PoolMeta
     __name__ = 'sale.sale'
 
     @classmethod
@@ -36,6 +36,7 @@ class Sale:
 
 
 class SaleLine:
+    __metaclass__ = PoolMeta
     __name__ = 'sale.line'
     party = fields.Many2One('party.party', 'Party', select=True,
         domain=[
