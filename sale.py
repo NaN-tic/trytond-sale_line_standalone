@@ -113,6 +113,14 @@ class SaleLine:
             table = TableHandler(cls, module_name)
             table.not_null_action('company', action='add')
 
+    @classmethod
+    def copy(cls, lines, default=None):
+        if default is None:
+            default = {}
+        default = default.copy()
+        default.setdefault('party', None)
+        return super(SaleLine, cls).copy(lines, default=default)
+
     @fields.depends('sale')
     def on_change_sale(self):
         if self.sale:
