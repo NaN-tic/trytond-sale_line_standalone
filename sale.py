@@ -135,7 +135,9 @@ class SaleLine:
 
     @fields.depends('party', 'currency')
     def on_change_product(self):
-        Date = Pool().get('ir.date')
+        pool = Pool()
+        Date = pool.get('ir.date')
+        Company = pool.get('company.company')
 
         context = {}
         context['customer'] = self.party.id if self.party else None
@@ -145,6 +147,14 @@ class SaleLine:
         context['sale_date'] = Date.today()
         with Transaction().set_context(context):
             super(SaleLine, self).on_change_product()
+
+        if not self.currency:
+            if self.sale:
+                self.currency = self.sale.currency
+            else:
+                if Transaction().context.get('company'):
+                    company = Company(Transaction().context['company'])
+                    self.currency = company.currency
 
     @staticmethod
     def default_company():
