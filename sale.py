@@ -80,6 +80,7 @@ class SaleLine:
                 cls.taxes.domain[cls.taxes.domain.index(d)] = (
                         ('company', '=', Eval('company', -1))
                     )
+                cls.taxes.depends.append('company')
                 break
 
     @classmethod
@@ -138,8 +139,9 @@ class SaleLine:
 
         context = {}
         context['customer'] = self.party.id if self.party else None
-        if self.party and getattr(self.party, 'sale_price_list'):
-            context['price_list'] = self.party.sale_price_list.id if self.party.sale_price_list else None
+        if self.party and hasattr(self.party, 'sale_price_list'):
+            context['price_list'] = self.party.sale_price_list.id \
+                if self.party.sale_price_list else None
         context['sale_date'] = Date.today()
         with Transaction().set_context(context):
             super(SaleLine, self).on_change_product()
