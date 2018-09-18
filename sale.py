@@ -10,8 +10,7 @@ from trytond.transaction import Transaction
 __all__ = ['Sale', 'SaleLine']
 
 
-class Sale:
-    __metaclass__ = PoolMeta
+class Sale(metaclass=PoolMeta):
     __name__ = 'sale.sale'
 
     @classmethod
@@ -35,8 +34,7 @@ class Sale:
         cls.lines.depends = list(set(cls.lines.depends) | add_remove_depends)
 
 
-class SaleLine:
-    __metaclass__ = PoolMeta
+class SaleLine(metaclass=PoolMeta):
     __name__ = 'sale.line'
     party = fields.Many2One('party.party', 'Party', select=True,
         domain=[
@@ -74,7 +72,10 @@ class SaleLine:
         cls.product.states['readonly'] &= Not(Bool(Eval('party', 0)))
         cls.quantity.states['readonly'] &= Not(Bool(Eval('party', 0)))
         cls.unit.states['readonly'] &= Not(Bool(Eval('party', 0)))
-        cls.amount.states['readonly'] &= Not(Bool(Eval('party', 0)))
+        if cls.amount.states.get('readonly'):
+            cls.amount.states['readonly'] &= Not(Bool(Eval('party', 0)))
+        else:
+            cls.amount.states['readonly'] = Not(Bool(Eval('party', 0)))
         for d in cls.taxes.domain:
             if 'company' in d:
                 cls.taxes.domain[cls.taxes.domain.index(d)] = (
