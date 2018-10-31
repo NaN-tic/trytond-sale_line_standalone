@@ -74,7 +74,10 @@ class SaleLine:
         cls.product.states['readonly'] &= Not(Bool(Eval('party', 0)))
         cls.quantity.states['readonly'] &= Not(Bool(Eval('party', 0)))
         cls.unit.states['readonly'] &= Not(Bool(Eval('party', 0)))
-        cls.amount.states['readonly'] &= Not(Bool(Eval('party', 0)))
+        if cls.amount.states.get('readonly'):
+            cls.amount.states['readonly'] &= Not(Bool(Eval('party', 0)))
+        else:
+            cls.amount.states['readonly'] = Not(Bool(Eval('party', 0)))
         for d in cls.taxes.domain:
             if 'company' in d:
                 cls.taxes.domain[cls.taxes.domain.index(d)] = (
@@ -166,3 +169,9 @@ class SaleLine:
         if Transaction().context.get('company'):
             company = Company(Transaction().context['company'])
             return company.currency.id
+
+    def get_rec_name(self, name):
+        if self.sale:
+            return super(SaleLine, self).get_rec_name(name)
+        else:
+            return self.product.rec_name
