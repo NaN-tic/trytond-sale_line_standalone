@@ -115,6 +115,22 @@ class SaleLine(metaclass=PoolMeta):
             table = TableHandler(cls, module_name)
             table.not_null_action('company', action='add')
 
+    @staticmethod
+    def default_company():
+        return Transaction().context.get('company')
+
+    @staticmethod
+    def default_currency():
+        Company = Pool().get('company.company')
+        if Transaction().context.get('company'):
+            company = Company(Transaction().context['company'])
+            return company.currency.id
+
+    def get_rec_name(self, name):
+        if self.product and not self.sale:
+            return '%s' % (self.product.rec_name)
+        return super(SaleLine, self).get_rec_name(name)
+
     @classmethod
     def copy(cls, lines, default=None):
         if default is None:
@@ -157,13 +173,8 @@ class SaleLine(metaclass=PoolMeta):
                     company = Company(Transaction().context['company'])
                     self.currency = company.currency
 
-    @staticmethod
-    def default_company():
-        return Transaction().context.get('company')
-
-    @staticmethod
-    def default_currency():
-        Company = Pool().get('company.company')
-        if Transaction().context.get('company'):
-            company = Company(Transaction().context['company'])
-            return company.currency.id
+    @fields.depends('sale')
+    def on_change_with_sale_state(self, name=None):
+        if not self.sale:
+            return 'draft'
+        return super(SaleLine, self).copy(name)
