@@ -177,4 +177,4 @@ class SaleLine(metaclass=PoolMeta):
     def on_change_with_sale_state(self, name=None):
         if not self.sale:
             return 'draft'
-        return super(SaleLine, self).copy(name)
+        return super(SaleLine, self).on_change_with_sale_state(name)
