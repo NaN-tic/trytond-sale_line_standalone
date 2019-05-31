@@ -69,13 +69,20 @@ class SaleLine(metaclass=PoolMeta):
     @classmethod
     def __setup__(cls):
         super(SaleLine, cls).__setup__()
-        cls.product.states['readonly'] &= Not(Bool(Eval('party', 0)))
-        cls.quantity.states['readonly'] &= Not(Bool(Eval('party', 0)))
-        cls.unit.states['readonly'] &= Not(Bool(Eval('party', 0)))
+        readonly_eval = If(Not(Eval('sale')), Not(Bool(Eval('party', 0))), False)
+        cls.product.states['readonly'] &= readonly_eval
+        cls.quantity.states['readonly'] &= readonly_eval
+        cls.unit.states['readonly'] &= readonly_eval
         if cls.amount.states.get('readonly'):
-            cls.amount.states['readonly'] &= Not(Bool(Eval('party', 0)))
+            cls.amount.states['readonly'] &= readonly_eval
         else:
-            cls.amount.states['readonly'] = Not(Bool(Eval('party', 0)))
+            cls.amount.states['readonly'] = readonly_eval
+
+        for field in ('product', 'quantity', 'unit', 'amount'):
+            for depend in ('sale', 'party'):
+                if depend not in getattr(cls, field).depends:
+                    getattr(cls, field).depends.append(depend)
+
         for d in cls.taxes.domain:
             if 'company' in d:
                 cls.taxes.domain[cls.taxes.domain.index(d)] = (
