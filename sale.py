@@ -17,12 +17,15 @@ class Sale(metaclass=PoolMeta):
     def __setup__(cls):
         super(Sale, cls).__setup__()
         add_remove = [
-            ('party', '=', Eval('party')),
             ('currency', '=', Eval('currency')),
             ('company', '=', Eval('company')),
             ('sale', '=', None),
+            ['OR',
+                ('party', '=', Eval('party', -1)),
+                ('party', '=', Eval('shipment_party', -1)),
+                ],
             ]
-        add_remove_depends = set(['party', 'currency', 'company'])
+        add_remove_depends = set(['party', 'shipment_party', 'currency', 'company'])
 
         if not cls.lines.add_remove:
             cls.lines.add_remove = add_remove
@@ -37,11 +40,11 @@ class Sale(metaclass=PoolMeta):
 class SaleLine(metaclass=PoolMeta):
     __name__ = 'sale.line'
     party = fields.Many2One('party.party', 'Party', select=True,
-        domain=[
-            ('id',
-                If(Bool(Eval('_parent_sale', {}).get('party', 0)),
-                    '=', '!='),
-                Eval('_parent_sale', {}).get('party', -1)),
+        domain=['OR',
+            ('id', If(Bool(Eval('_parent_sale', {}).get('party', 0)),
+                '=', '!='), Eval('_parent_sale', {}).get('party', -1)),
+            ('id', If(Bool(Eval('_parent_sale', {}).get('shipment_party', 0)),
+                '=', '!='), Eval('_parent_sale', {}).get('shipment_party', -1)),
             ],
         states={
             'required': Not(Bool(Eval('sale'))),
