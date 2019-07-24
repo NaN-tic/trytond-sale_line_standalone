@@ -73,11 +73,11 @@ class SaleLine(metaclass=PoolMeta):
     def __setup__(cls):
         super(SaleLine, cls).__setup__()
         readonly_eval = If(Not(Eval('sale')), Not(Bool(Eval('party', 0))), False)
-        cls.product.states['readonly'] &= readonly_eval
-        cls.quantity.states['readonly'] &= readonly_eval
-        cls.unit.states['readonly'] &= readonly_eval
+        cls.product.states['readonly'] |= readonly_eval
+        cls.quantity.states['readonly'] |= readonly_eval
+        cls.unit.states['readonly'] |= readonly_eval
         if cls.amount.states.get('readonly'):
-            cls.amount.states['readonly'] &= readonly_eval
+            cls.amount.states['readonly'] |= readonly_eval
         else:
             cls.amount.states['readonly'] = readonly_eval
 
@@ -128,6 +128,10 @@ class SaleLine(metaclass=PoolMeta):
     @staticmethod
     def default_company():
         return Transaction().context.get('company')
+
+    @staticmethod
+    def default_sale_state():
+        return 'draft'
 
     @staticmethod
     def default_currency():
