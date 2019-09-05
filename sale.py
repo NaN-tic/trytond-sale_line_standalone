@@ -145,6 +145,9 @@ class SaleLine(metaclass=PoolMeta):
             return '%s' % (self.product.rec_name)
         return super(SaleLine, self).get_rec_name(name)
 
+    def get_warehouse(self, name):
+        return super(SaleLine, self).get_warehouse(name) if self.sale else None
+
     @classmethod
     def copy(cls, lines, default=None):
         if default is None:
