@@ -80,10 +80,8 @@ Create product::
     >>> product = Product()
     >>> template = ProductTemplate()
     >>> template.name = 'product'
-    >>> template.category = category
     >>> template.default_uom = unit
     >>> template.type = 'goods'
-    >>> template.purchasable = True
     >>> template.salable = True
     >>> template.list_price = Decimal('10')
     >>> template.account_category = account_category_tax

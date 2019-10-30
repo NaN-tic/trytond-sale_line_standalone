@@ -156,7 +156,8 @@ class SaleLine(metaclass=PoolMeta):
         default.setdefault('party', None)
         return super(SaleLine, cls).copy(lines, default=default)
 
-    @fields.depends('sale')
+    @fields.depends('sale', '_parent_sale.company', '_parent_sale.currency',
+        '_parent_sale.party')
     def on_change_sale(self):
         if self.sale:
             try:
