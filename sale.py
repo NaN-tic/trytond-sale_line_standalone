@@ -96,9 +96,8 @@ class SaleLine(metaclass=PoolMeta):
 
     @classmethod
     def __register__(cls, module_name):
-        TableHandler = backend.get('TableHandler')
         cursor = Transaction().connection.cursor()
-        table = TableHandler(cls, module_name)
+        table = backend.TableHandler(cls, module_name)
         sql_table = cls.__table__()
         Sale = Pool().get('sale.sale')
         line = cls.__table__()
@@ -122,7 +121,7 @@ class SaleLine(metaclass=PoolMeta):
                     )
                 )
             cursor.execute(*sql_table.update([sql_table.company], values))
-            table = TableHandler(cls, module_name)
+            table = backend.TableHandler(cls, module_name)
             table.not_null_action('company', action='add')
 
     @staticmethod
