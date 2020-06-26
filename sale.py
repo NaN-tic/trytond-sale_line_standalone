@@ -61,18 +61,18 @@ class SaleLine(metaclass=PoolMeta):
             'required': Not(Bool(Eval('sale'))),
             },
         depends=['sale'])
-    company = fields.Many2One('company.company', 'Company',
-        domain=[
-            ('id',
-                If(Bool(Eval('_parent_sale', {}).get('company', 0)),
-                    '=', '!='),
-                Eval('_parent_sale', {}).get('company', -1)),
-            ], depends=['sale'], select=True)
 
     @classmethod
     def __setup__(cls):
         super(SaleLine, cls).__setup__()
         readonly_eval = If(Not(Eval('sale')), Not(Bool(Eval('party', 0))), False)
+        party_required = Not(Bool(Eval('party')))
+        cls.sale.required = False
+        if cls.sale.states.get('required'):
+            cls.sale.states['required'] |= party_required
+        else:
+            cls.sale.states['required'] = party_required
+        cls.sale.depends.append('party')
         cls.product.states['readonly'] |= readonly_eval
         cls.quantity.states['readonly'] |= readonly_eval
         cls.unit.states['readonly'] |= readonly_eval
@@ -93,36 +93,22 @@ class SaleLine(metaclass=PoolMeta):
                     )
                 cls.taxes.depends.append('company')
                 break
+        # company function field and m2o
+        cls.company.setter = 'set_company'
+        cls.company.searcher = 'searcher_company'
 
     @classmethod
     def __register__(cls, module_name):
-        cursor = Transaction().connection.cursor()
-        table = backend.TableHandler(cls, module_name)
-        sql_table = cls.__table__()
-        Sale = Pool().get('sale.sale')
-        line = cls.__table__()
-        sale = Sale.__table__()
-
-        created_company = not table.column_exist('company')
-
         super(SaleLine, cls).__register__(module_name)
 
-        if created_company:
-            # Fill company field of sale lines if the installation of this
-            # module takes place when there are already sales in the database
-            # and set it to be required.
-            values = (line
-                .join(sale, 'LEFT', condition=(line.sale == sale.id))
-                .select(
-                    sale.company,
-                    where=(
-                        (line.id == sql_table.id)
-                        )
-                    )
-                )
-            cursor.execute(*sql_table.update([sql_table.company], values))
-            table = backend.TableHandler(cls, module_name)
-            table.not_null_action('company', action='add')
+        table = backend.TableHandler(cls, module_name)
+        sale_table = backend.TableHandler(cls, 'sale')
+
+        # Migration from 5.6: drop required on sale
+        sale_table.not_null_action('sale', action='remove')
+
+        if not table.column_exist('company'):
+            table.add_column('company', 'INTEGER')
 
     @staticmethod
     def default_company():
@@ -142,6 +128,8 @@ class SaleLine(metaclass=PoolMeta):
     def get_rec_name(self, name):
         if self.product and not self.sale:
             return '%s' % (self.product.rec_name)
+        elif not self.sale:
+            return '(%s)' % (self.id)
         return super(SaleLine, self).get_rec_name(name)
 
     def get_warehouse(self, name):
@@ -154,6 +142,36 @@ class SaleLine(metaclass=PoolMeta):
         default = default.copy()
         default.setdefault('party', None)
         return super(SaleLine, cls).copy(lines, default=default)
+
+    def on_change_with_company(self, name=None):
+        table = self.__table__()
+        cursor = Transaction().connection.cursor()
+        sql_where = (table.id == self.id)
+        cursor.execute(*table.select(table.company, where=sql_where, limit=1))
+        company_id = cursor.fetchone()
+        if company_id:
+            return company_id[0]
+        return super(SaleLine, self).on_change_with_company(name=name)
+
+    @classmethod
+    def set_company(cls, lines, name, value):
+        # set company from transaction
+        company = Transaction().context.get('company')
+        table = cls.__table__()
+        cursor = Transaction().connection.cursor()
+        sql_where = (table.id.in_([l.id for l in lines]))
+        cursor.execute(*table.update(
+            columns=[table.company],
+            values=[company],
+            where=sql_where))
+
+    @classmethod
+    def searcher_company(cls, name, clause):
+        Operator = fields.SQL_OPERATORS[clause[1]]
+        table = cls.__table__()
+        query = table.select(table.id,
+            where=Operator(table.company, clause[2]))
+        return [('id', 'in', query)]
 
     @fields.depends('sale', '_parent_sale.company', '_parent_sale.currency',
         '_parent_sale.party')

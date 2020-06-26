@@ -18,7 +18,7 @@ Imports::
     ...     set_fiscalyear_invoice_sequences, create_payment_term
     >>> today = datetime.date.today()
 
-Install sale::
+Install sale_line_standalone::
 
     >>> config = activate_modules('sale_line_standalone')
 
@@ -51,6 +51,8 @@ Create parties::
     >>> Party = Model.get('party.party')
     >>> customer = Party(name='Customer')
     >>> customer.save()
+    >>> customer2 = Party(name='Customer 2')
+    >>> customer2.save()
 
 Create category::
 
@@ -93,7 +95,7 @@ Create payment term::
     >>> payment_term = create_payment_term()
     >>> payment_term.save()
 
-Sale line and sale::
+Create sales::
 
     >>> Sale = Model.get('sale.sale')
     >>> SaleLine = Model.get('sale.line')
@@ -106,7 +108,56 @@ Sale line and sale::
     >>> sale.payment_term = payment_term
     >>> sale.lines.append(sale_line)
     >>> sale.save()
-    >>> sale.state
-    'draft'
-    >>> len(sale.lines)
-    1
+    >>> sale.state == 'draft'
+    True
+    >>> len(sale.lines) == 1
+    True
+
+    >>> sale_line = SaleLine()
+    >>> sale_line.party = customer2
+    >>> sale_line.product = product
+    >>> sale_line.quantity = 1
+    >>> sale2 = Sale()
+    >>> sale2.party = customer2
+    >>> sale2.payment_term = payment_term
+    >>> sale2.lines.append(sale_line)
+    >>> sale2.save()
+    >>> sale2.state == 'draft'
+    True
+    >>> len(sale2.lines) == 1
+    True
+
+Create lines::
+
+    >>> sale_line = SaleLine()
+    >>> sale_line.party = customer
+    >>> sale_line.product = product
+    >>> sale_line.quantity = 2
+    >>> sale_line.save()
+
+    >>> sale_line2 = SaleLine()
+    >>> sale_line2.party = customer2
+    >>> sale_line2.product = product
+    >>> sale_line2.quantity = 2
+    >>> sale_line2.save()
+
+    >>> lines = SaleLine.find([('sale', '=', None)])
+    >>> len(lines) == 2
+    True
+    >>> set([l.company for l in lines]) == set([company])
+    True
+
+Add new lines in their respective sales::
+
+    >>> sale.party == sale_line.party
+    True
+    >>> sale2.party == sale_line2.party
+    True
+    >>> sale.lines.append(sale_line)
+    >>> sale.save()
+    >>> len(sale.lines) == 2
+    True
+    >>> sale2.lines.append(sale_line2)
+    >>> sale2.save()
+    >>> len(sale2.lines) == 2
+    True
