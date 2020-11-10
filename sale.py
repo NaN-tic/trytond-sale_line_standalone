@@ -63,13 +63,6 @@ class SaleLine(metaclass=PoolMeta):
     def __setup__(cls):
         super(SaleLine, cls).__setup__()
         readonly_eval = If(Not(Eval('sale')), Not(Bool(Eval('party', 0))), False)
-        party_required = Not(Bool(Eval('party')))
-        cls.sale.required = False
-        if cls.sale.states.get('required'):
-            cls.sale.states['required'] |= party_required
-        else:
-            cls.sale.states['required'] = party_required
-        cls.sale.depends.append('party')
         cls.product.states['readonly'] |= readonly_eval
         cls.quantity.states['readonly'] |= readonly_eval
         cls.unit.states['readonly'] |= readonly_eval
