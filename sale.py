@@ -184,13 +184,16 @@ class SaleLine(metaclass=PoolMeta):
         Date = pool.get('ir.date')
         Company = pool.get('company.company')
 
-        context = {}
-        context['customer'] = self.party.id if self.party else None
+        context = Transaction().context
+        customer = self.party.id if self.party else None
+        price_list = None
         if self.party and hasattr(self.party, 'sale_price_list'):
-            context['price_list'] = self.party.sale_price_list.id \
-                if self.party.sale_price_list else None
-        context['sale_date'] = Date.today()
-        with Transaction().set_context(context):
+            price_list = (self.party.sale_price_list.id
+                            if self.party.sale_price_list else None)
+        sale_date = context.get('sale_date', Date.today())
+
+        with Transaction().set_context(customer=customer, price_list=price_list,
+                sale_date=sale_date):
             super(SaleLine, self).on_change_product()
 
         if not self.currency:
