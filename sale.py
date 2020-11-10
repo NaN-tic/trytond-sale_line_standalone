@@ -20,12 +20,9 @@ class Sale(metaclass=PoolMeta):
             ('currency', '=', Eval('currency')),
             ('company', '=', Eval('company')),
             ('sale', '=', None),
-            ['OR',
-                ('party', '=', Eval('party', -1)),
-                ('party', '=', Eval('shipment_party', -1)),
-                ],
+            ('party', '=', Eval('party', -1)),
             ]
-        add_remove_depends = set(['party', 'shipment_party', 'currency', 'company'])
+        add_remove_depends = set(['party', 'currency', 'company'])
 
         if not cls.lines.add_remove:
             cls.lines.add_remove = add_remove
