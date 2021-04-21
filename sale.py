@@ -47,17 +47,6 @@ class SaleLine(metaclass=PoolMeta):
             'required': Not(Bool(Eval('sale'))),
             },
         depends=['sale'])
-    currency = fields.Many2One('currency.currency', 'Currency',
-        domain=[
-            ('id',
-                If(Bool(Eval('_parent_sale', {}).get('currency', 0)),
-                    '=', '!='),
-                Eval('_parent_sale', {}).get('currency', -1)),
-            ],
-        states={
-            'required': Not(Bool(Eval('sale'))),
-            },
-        depends=['sale'])
 
     @classmethod
     def __setup__(cls):
@@ -84,9 +73,17 @@ class SaleLine(metaclass=PoolMeta):
                     )
                 cls.taxes.depends.append('company')
                 break
-        # company function field and m2o
+
+        # company and currency function field / set + searcher
         cls.company.setter = 'set_company'
         cls.company.searcher = 'searcher_company'
+        # currency function field and m2o
+        cls.currency.setter = 'set_currency'
+        cls.currency.searcher = 'searcher_currency'
+
+        # remove sale in __access__ / issue9903
+        if 'sale' in cls.__access__:
+            cls.__access__.remove('sale')
 
     @classmethod
     def __register__(cls, module_name):
@@ -100,6 +97,8 @@ class SaleLine(metaclass=PoolMeta):
 
         if not table.column_exist('company'):
             table.add_column('company', 'INTEGER')
+        if not table.column_exist('currency'):
+            table.add_column('currency', 'INTEGER')
 
     @staticmethod
     def default_company():
@@ -134,7 +133,10 @@ class SaleLine(metaclass=PoolMeta):
         default.setdefault('party', None)
         return super(SaleLine, cls).copy(lines, default=default)
 
+    @fields.depends('sale')
     def on_change_with_company(self, name=None):
+        if self.sale:
+            return super(SaleLine, self).on_change_with_company()
         table = self.__table__()
         cursor = Transaction().connection.cursor()
         sql_where = (table.id == self.id)
@@ -142,7 +144,6 @@ class SaleLine(metaclass=PoolMeta):
         company_id = cursor.fetchone()
         if company_id:
             return company_id[0]
-        return super(SaleLine, self).on_change_with_company(name=name)
 
     @classmethod
     def set_company(cls, lines, name, value):
@@ -162,6 +163,44 @@ class SaleLine(metaclass=PoolMeta):
         table = cls.__table__()
         query = table.select(table.id,
             where=Operator(table.company, clause[2]))
+        return [('id', 'in', query)]
+
+    @fields.depends('sale')
+    def on_change_with_currency(self, name=None):
+        if self.sale:
+            return super(SaleLine, self).on_change_with_currency()
+        table = self.__table__()
+        cursor = Transaction().connection.cursor()
+        sql_where = (table.id == self.id)
+        cursor.execute(*table.select(table.currency, where=sql_where, limit=1))
+        company_id = cursor.fetchone()
+        if company_id:
+            return company_id[0]
+
+    @classmethod
+    def set_currency(cls, lines, name, value):
+        # set currency from company transaction
+        Company = Pool().get('company.company')
+
+        company = Transaction().context.get('company')
+        if not company:
+            return
+
+        company = Company(company)
+        table = cls.__table__()
+        cursor = Transaction().connection.cursor()
+        sql_where = (table.id.in_([l.id for l in lines]))
+        cursor.execute(*table.update(
+            columns=[table.currency],
+            values=[company.currency.id],
+            where=sql_where))
+
+    @classmethod
+    def searcher_currency(cls, name, clause):
+        Operator = fields.SQL_OPERATORS[clause[1]]
+        table = cls.__table__()
+        query = table.select(table.id,
+            where=Operator(table.currency, clause[2]))
         return [('id', 'in', query)]
 
     @fields.depends('sale', '_parent_sale.company', '_parent_sale.currency',
