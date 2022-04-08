@@ -46,7 +46,10 @@ class SaleLine(metaclass=PoolMeta):
         states={
             'required': Not(Bool(Eval('sale'))),
             },
-        depends=['sale'])
+        context={
+            'company': Eval('company'),
+            },
+        depends=['sale', 'company'])
 
     @classmethod
     def __setup__(cls):
