@@ -67,14 +67,14 @@ class SaleLine(metaclass=PoolMeta):
         for field in ('product', 'quantity', 'unit', 'amount'):
             for depend in ('sale', 'party'):
                 if depend not in getattr(cls, field).depends:
-                    getattr(cls, field).depends.append(depend)
+                    getattr(cls, field).depends.add(depend)
 
         for d in cls.taxes.domain:
             if 'company' in d:
                 cls.taxes.domain[cls.taxes.domain.index(d)] = (
                         ('company', '=', Eval('company', -1))
                     )
-                cls.taxes.depends.append('company')
+                cls.taxes.depends.add('company')
                 break
 
         # company and currency function field / set + searcher
