@@ -90,10 +90,11 @@ class SaleLine(metaclass=PoolMeta):
 
     @classmethod
     def __register__(cls, module_name):
+        pool = Pool()
+        Sale = pool.get('sale.sale')
+        sale_table = Sale.__table_handler__(module_name)
+        table = cls.__table_handler__(module_name)
         super(SaleLine, cls).__register__(module_name)
-
-        table = backend.TableHandler(cls, module_name)
-        sale_table = backend.TableHandler(cls, 'sale')
 
         # Migration from 5.6: drop required on sale
         sale_table.not_null_action('sale', action='remove')
