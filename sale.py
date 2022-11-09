@@ -36,7 +36,7 @@ class Sale(metaclass=PoolMeta):
 
 class SaleLine(metaclass=PoolMeta):
     __name__ = 'sale.line'
-    party = fields.Many2One('party.party', 'Party', select=True,
+    party = fields.Many2One('party.party', 'Party',
         domain=['OR',
             ('id', If(Bool(Eval('_parent_sale', {}).get('party', 0)),
                 '=', '!='), Eval('_parent_sale', {}).get('party', -1)),
