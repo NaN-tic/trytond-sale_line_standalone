@@ -18,7 +18,7 @@ class Sale(metaclass=PoolMeta):
         super(Sale, cls).__setup__()
         add_remove = [
             ('currency', '=', Eval('currency')),
-            ('company', '=', Eval('company')),
+            ('company', '=', Eval('company', -1)),
             ('sale', '=', None),
             ('party', '=', Eval('party', -1)),
             ]
@@ -47,7 +47,7 @@ class SaleLine(metaclass=PoolMeta):
             'required': Not(Bool(Eval('sale'))),
             },
         context={
-            'company': Eval('company'),
+            'company': Eval('company', -1),
             },
         depends=['sale', 'company'])
 
