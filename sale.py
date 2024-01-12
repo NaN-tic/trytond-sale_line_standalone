@@ -46,7 +46,7 @@ class SaleLine(metaclass=PoolMeta):
         context={
             'company': Eval('company', -1),
             },
-        depends=['sale', 'company'])
+        depends=['company'])
 
     @classmethod
     def __setup__(cls):
