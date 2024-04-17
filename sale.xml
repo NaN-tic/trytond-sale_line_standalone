@@ -48,14 +48,14 @@ the full copyright notices and license terms. -->
 
         <!-- from issue9903 -->
         <record model="ir.model.access" id="access_sale_line">
-            <field name="model" search="[('model', '=', 'sale.line')]"/>
+            <field name="model">sale.line</field>
             <field name="perm_read" eval="False"/>
             <field name="perm_write" eval="False"/>
             <field name="perm_create" eval="False"/>
             <field name="perm_delete" eval="False"/>
         </record>
         <record model="ir.model.access" id="access_sale_line_sale">
-            <field name="model" search="[('model', '=', 'sale.line')]"/>
+            <field name="model">sale.line</field>
             <field name="group" ref="sale.group_sale"/>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="True"/>
@@ -65,7 +65,7 @@ the full copyright notices and license terms. -->
 
         <record model="ir.rule.group" id="rule_group_sale_line_companies">
             <field name="name">User in companies</field>
-            <field name="model" search="[('model', '=', 'sale.line')]"/>
+            <field name="model">sale.line</field>
             <field name="global_p" eval="True"/>
         </record>
         <record model="ir.rule" id="rule_sale_line_companies">
