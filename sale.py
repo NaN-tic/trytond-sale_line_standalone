@@ -250,3 +250,13 @@ class SaleLine(metaclass=PoolMeta):
         if not self.sale:
             return 'draft'
         return super(SaleLine, self).on_change_with_sale_state(name)
+
+    def get_from_location(self, name):
+        # in case has sale, call super because get party or shipment_party from the sale
+        if self.sale:
+            return super().get_from_location(name)
+
+    def get_to_location(self, name):
+        # in case has sale, call super because get party or shipment_party from the sale
+        if self.sale:
+            return super().get_to_location(name)

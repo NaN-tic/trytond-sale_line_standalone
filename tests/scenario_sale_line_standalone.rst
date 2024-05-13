@@ -147,6 +147,9 @@ Create lines::
     >>> set([l.company for l in lines]) == set([company])
     True
 
+    >>> (sale_line.from_location, sale_line.to_location) == (None, None)
+    True
+
 Add new lines in their respective sales::
 
     >>> sale.party == sale_line.party
@@ -160,4 +163,8 @@ Add new lines in their respective sales::
     >>> sale2.lines.append(sale_line2)
     >>> sale2.save()
     >>> len(sale2.lines) == 2
+    True
+
+    >>> sale_line.reload()
+    >>> (sale_line.from_location.type, sale_line.to_location.type) == ('storage', 'customer')
     True
