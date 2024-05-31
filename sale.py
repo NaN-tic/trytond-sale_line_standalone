@@ -254,3 +254,14 @@ class SaleLine(metaclass=PoolMeta):
         # in case has sale, call super because get party or shipment_party from the sale
         if self.sale:
             return super().get_to_location(name)
+
+    @fields.depends('sale', 'party', 'company')
+    def _get_tax_context(self):
+        if not self.sale:
+            context = {}
+            if self.party and self.party.lang:
+                context['language'] = self.party.lang.code
+            if self.company:
+                context['company'] = self.company.id
+            return context
+        return super(SaleLine, self)._get_tax_context()
