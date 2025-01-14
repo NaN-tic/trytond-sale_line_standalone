@@ -30,6 +30,7 @@ class Test(unittest.TestCase):
         # Create company
         _ = create_company()
         company = get_company()
+        currency = company.currency
 
         # Create fiscal year
         fiscalyear = set_fiscalyear_invoice_sequences(
@@ -127,6 +128,8 @@ class Test(unittest.TestCase):
         sale_line2.product = product
         sale_line2.quantity = 2
         sale_line2.save()
+        self.assertEqual(sale_line2.company, company)
+        self.assertEqual(sale_line2.currency, currency)
         lines = SaleLine.find([('sale', '=', None)])
         self.assertEqual(len(lines), 2)
         self.assertEqual(set([l.company for l in lines]), set([company]))
