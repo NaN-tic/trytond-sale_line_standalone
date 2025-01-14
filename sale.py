@@ -109,12 +109,15 @@ class SaleLine(metaclass=PoolMeta):
     def default_sale_state():
         return 'draft'
 
-    @staticmethod
-    def default_currency():
-        Company = Pool().get('company.company')
-        if Transaction().context.get('company'):
-            company = Company(Transaction().context['company'])
-            return company.currency.id
+    @classmethod
+    def default_currency(cls, **pattern):
+        pool = Pool()
+        Company = pool.get('company.company')
+        company = pattern.get('company')
+        if not company:
+            company = cls.default_company()
+        if company:
+            return Company(company).currency.id
 
     def get_rec_name(self, name):
         if self.product and not self.sale:
@@ -133,15 +136,19 @@ class SaleLine(metaclass=PoolMeta):
 
     @fields.depends('sale')
     def on_change_with_company(self, name=None):
+        Line = Pool().get('sale.line')
+
         if self.sale:
             return super(SaleLine, self).on_change_with_company()
         table = self.__table__()
         cursor = Transaction().connection.cursor()
         sql_where = (table.id == self.id)
         cursor.execute(*table.select(table.company, where=sql_where, limit=1))
-        company_id = cursor.fetchone()
-        if company_id:
-            return company_id[0]
+        lines = cursor.fetchone()
+        if lines:
+            return lines[0]
+        else:
+            return Line.default_company()
 
     @classmethod
     def set_company(cls, lines, name, value):
@@ -165,15 +172,19 @@ class SaleLine(metaclass=PoolMeta):
 
     @fields.depends('sale')
     def on_change_with_currency(self, name=None):
+        Line = Pool().get('sale.line')
+
         if self.sale:
-            return super(SaleLine, self).on_change_with_currency()
+            return super().on_change_with_currency()
         table = self.__table__()
         cursor = Transaction().connection.cursor()
         sql_where = (table.id == self.id)
         cursor.execute(*table.select(table.currency, where=sql_where, limit=1))
-        company_id = cursor.fetchone()
-        if company_id:
-            return company_id[0]
+        lines = cursor.fetchone()
+        if lines:
+            return lines[0]
+        else:
+            return Line.default_currency()
 
     @classmethod
     def set_currency(cls, lines, name, value):
@@ -243,7 +254,16 @@ class SaleLine(metaclass=PoolMeta):
     def on_change_with_sale_state(self, name=None):
         if not self.sale:
             return 'draft'
-        return super(SaleLine, self).on_change_with_sale_state(name)
+        return super().on_change_with_sale_state(name)
+
+    @fields.depends('currency')
+    def on_change_with_amount(self):
+        amount = super().on_change_with_amount()
+        if self.type == 'line' and not self.sale:
+            currency = self.currency
+            if currency:
+                return currency.round(amount)
+        return amount
 
     def get_from_location(self, name):
         # in case has sale, call super because get party or shipment_party from the sale
@@ -265,3 +285,15 @@ class SaleLine(metaclass=PoolMeta):
                 context['company'] = self.company.id
             return context
         return super(SaleLine, self)._get_tax_context()
+
+    @property
+    def _invoice_remaining_quantity(self):
+        if not self.sale:
+            return self.quantity
+        return super()._invoice_remaining_quantity
+
+    @property
+    def _move_remaining_quantity(self):
+        if not self.sale:
+            return abs(self.quantity) if self.quantity else None
+        return super()._move_remaining_quantity
