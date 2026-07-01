@@ -134,6 +134,14 @@ class SaleLine(metaclass=PoolMeta):
         default.setdefault('party', None)
         return super(SaleLine, cls).copy(lines, default=default)
 
+    @classmethod
+    def check_modification(cls, mode, lines, values=None, external=False):
+        # call super() in case line has sale
+        sale_lines = [l for l in lines if l.sale]
+        if sale_lines:
+            super().check_modification(
+                mode, sale_lines, values=values, external=external)
+
     @fields.depends('sale')
     def on_change_with_company(self, name=None):
         Line = Pool().get('sale.line')
