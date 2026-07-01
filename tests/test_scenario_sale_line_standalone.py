@@ -136,6 +136,17 @@ class Test(unittest.TestCase):
         self.assertEqual((sale_line.from_location, sale_line.to_location),
                          (None, None))
 
+        # Delete a standalone line without sale
+        standalone_line = SaleLine()
+        standalone_line.party = customer
+        standalone_line.product = product
+        standalone_line.quantity = 1
+        standalone_line.save()
+        standalone_line_id = standalone_line.id
+        standalone_line.click('delete')
+        deleted_lines = SaleLine.find([('id', '=', standalone_line_id)])
+        self.assertEqual(deleted_lines, [])
+
         # Add new lines in their respective sales
         self.assertEqual(sale.party, sale_line.party)
         self.assertEqual(sale2.party, sale_line2.party)
